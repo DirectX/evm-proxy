@@ -1,0 +1,15 @@
+server:
+  host: 127.0.0.1
+  port: 8000
+cache:
+  enabled: false
+  exclude_methods:
+    "eth_syncing": true
+    "eth_blockNumber": true
+upstreams:
+  - http_url: http://localhost:8545
+  - http_url: https://bsc-dataseed1.binance.org/
+    rate_limit: 10K / 5 m
+    failover: true
+try_next_upstream_on_errors:
+  "method handler crashed": true
