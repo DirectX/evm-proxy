@@ -4,10 +4,11 @@ JSON RPC 2.0 caching proxy (and simple balancer) for blockchain nodes (geth, Eri
 
 ### Features
 
+* Written on Rust with Tokio async library and Actix Web server. High speed data processing and low memory footprint. Could be compilled as standalone executable with no external dependencies
 * Handling of node's recoverable errors (no data for particular block in the particular node) with requerying from next available upstream
-* In-memory caching of all requests with automatic cashe cleaning in terms of time to live and maximum cache capacity
-* Preventing distinctive methods from caching
-* Maintain optional rate limits relevant for every upstream
+* In-memory caching of all requests with automatic cache cleaning in terms of time to live and maximum cache capacity
+* Preventing some methods from caching
+* Maintain optional rate limits relevant to every upstream
 
 ### Flow Chart
 
@@ -21,7 +22,7 @@ sequenceDiagram
     participant Node N
 
     Web3 Client->>EVM Proxy: eth_getBlockByNumber[0x1,false]
-    EVM Proxy->>EVM Proxy: cache permitted?
+    EVM Proxy->>EVM Proxy: cache permitted for 'eth_getBlockByNumber'?
     EVM Proxy->>RAM Cache: get('eth_getBlockByNumber[0x1,false]')
     RAM Cache-->>EVM Proxy: None
     EVM Proxy->>Node 1: eth_getBlockByNumber[0x1,false]
@@ -35,8 +36,8 @@ sequenceDiagram
     EVM Proxy-->>Web3 Client: { result: { "difficulty":"0x2","extraData":"0x... } }
 
     Web3 Client->>EVM Proxy: eth_getBlockByNumber[0x1,false]
-    EVM Proxy->>EVM Proxy: cache permitted?
-    EVM Proxy->>RAM Cache: read eth_getBlockByNumber[0x1,false]
+    EVM Proxy->>EVM Proxy: cache permitted for 'eth_getBlockByNumber'?
+    EVM Proxy->>RAM Cache: get('eth_getBlockByNumber[0x1,false]')
     RAM Cache-->>EVM Proxy: { result: { "difficulty":"0x2","extraData":"0x... } }
     EVM Proxy-->>Web3 Client: { result: { "difficulty":"0x2","extraData":"0x... } }
 ```
@@ -86,9 +87,9 @@ try_next_upstream_on_errors:
 
 Cache as of now could be either on (true) and off (false). TTL and capacity tuning TBD.
 
-Marking last upstream with ```failover: true``` means that this upstream will wait for response when rate limits was exceeded. If upstream not marked as failover and runs out of rate limits next upstream will be requested immediately.
+Marking last upstream with ```failover: true``` means that this upstream will wait for response if rate limits was exceeded. If upstream not marked as failover and runs out of rate limits next upstream will be requested immediately if available.
 
-```try_next_upstream_on_errors``` is an example of internal error which assumes local node problem possibly recoverable using another upstream node request with the same params.
+```try_next_upstream_on_errors``` is an example of internal error which assumes local node problem possibly recoverable using another upstream node request with the same params. This could be extended with other application-specific recoverable errors.
 
 #### Rate limits examples
 
