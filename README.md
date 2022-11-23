@@ -83,6 +83,7 @@ upstreams:
     failover: true
 try_next_upstream_on_errors:
   "method handler crashed": true
+  "header not found": true
 ```
 
 Cache as of now could be either on (true) and off (false). TTL and capacity tuning TBD.
